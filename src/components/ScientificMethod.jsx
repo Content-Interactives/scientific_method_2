@@ -7,6 +7,8 @@ const ScientificMethod = () => {
 	const [isExplaining, setIsExplaining] = useState(false);
 	const [currentQuestion, setCurrentQuestion] = useState(1);
 	const [isFadingOut, setIsFadingOut] = useState(false);
+	const [correctAnswerCount, setCorrectAnswerCount] = useState(0);
+	const [showCelebration, setShowCelebration] = useState(false);
 
 	const handleReset = () => {
 		setIsAnimating(false);
@@ -14,6 +16,7 @@ const ScientificMethod = () => {
 		setFeedback(null);
 		setIsExplaining(false);
 		setCurrentQuestion(1);
+		setCorrectAnswerCount(0);
 	};
 
 	const handleExplore = () => {
@@ -38,6 +41,19 @@ const ScientificMethod = () => {
 
 		if (step === correctAnswers[currentQuestion]) {
 			setFeedback({ text: 'Great job!', isCorrect: true, correctStep: step });
+			const newCount = correctAnswerCount + 1;
+			setCorrectAnswerCount(newCount);
+			
+			// Show and hide celebration when reaching 6 correct answers
+			if (newCount >= 6) {
+				setShowCelebration(true);
+				setTimeout(() => {
+					setShowCelebration(prev => ({ ...prev, fadeOut: true }));
+				}, 3000);
+				setTimeout(() => {
+					setShowCelebration(false);
+				}, 4000);
+			}
 		} else {
 			setFeedback({ text: 'Try again!', isCorrect: false });
 		}
@@ -271,12 +287,65 @@ const ScientificMethod = () => {
 						animation-delay: 0.8s;
 						opacity: 0;
 					}
+
+					.feedback-container {
+						display: flex;
+						align-items: center;
+						gap: 0.5rem;
+					}
+
+					.skip-button {
+						background-color: #6B7280;
+						color: white;
+						border: none;
+						border-radius: 0.25rem;
+						padding: 0.25rem 0.75rem;
+						font-size: 0.75rem;
+						font-weight: 600;
+						cursor: pointer;
+						transition: all 0.2s;
+					}
+
+					.skip-button:hover {
+						background-color: #4B5563;
+					}
+
+					.celebration-overlay {
+						position: absolute;
+						top: 0;
+						left: 0;
+						right: 0;
+						bottom: 0;
+						background-color: rgba(255, 255, 255, 0.95);
+						display: flex;
+						justify-content: center;
+						align-items: center;
+						z-index: 50;
+						transition: background-color 1s ease;
+					}
+
+					.celebration-overlay.fade-out {
+						background-color: rgba(255, 255, 255, 0);
+					}
+
+					.celebration-text {
+						color: #00783E;
+						font-size: 1.25rem;
+						font-weight: 600;
+						text-align: center;
+						padding: 2rem;
+						animation: fadeIn 0.5s ease-out forwards;
+					}
+
+					.celebration-text.fade-out {
+						animation: fadeOut 1s ease-out forwards;
+					}
 				`}
 			</style>
 			<div className="p-4">
 				{/* Title and Reset Button */}
 				<div className="flex justify-between items-center mb-4">
-					<h2 className="text-[#00783E] text-sm font-medium select-none">Scientific Method Explorer</h2>
+					<h2 className="text-[#00783E] text-sm font-medium select-none">Steps of the Scientific Method</h2>
 					<button 
 						className="reset-button"
 						onClick={handleReset}
@@ -445,9 +514,19 @@ const ScientificMethod = () => {
 							</div>
 							<div className="absolute bottom-2 flex w-full px-2 justify-between">
 								{(feedback && !isExplaining) && (
-									<p className={`text-sm feedback-text ${feedback.isCorrect ? 'feedback-correct' : 'feedback-incorrect'} ${isFadingOut ? 'fade-out' : ''}`}>
-										{feedback.text}
-									</p>
+									<div className={`feedback-container ${isFadingOut ? 'fade-out' : ''}`}>
+										<p className={`text-sm feedback-text ${feedback.isCorrect ? 'feedback-correct' : 'feedback-incorrect'}`}>
+											{feedback.text}
+										</p>
+										{!feedback.isCorrect && (
+											<button 
+												className="skip-button"
+												onClick={handleNextQuestion}
+											>
+												Skip
+											</button>
+										)}
+									</div>
 								)}
 								<div className="ml-auto flex gap-2">
 									{(!isExplaining && feedback?.isCorrect) && (
@@ -463,11 +542,18 @@ const ScientificMethod = () => {
 											className={`feedback-button ${!isExplaining ? (isFadingOut ? 'fade-out' : '') : (isFadingOut ? 'fade-out' : 'delayed-fade-in')}`}
 											onClick={currentQuestion === 6 ? handleReset : handleNextQuestion}
 										>
-											{currentQuestion === 6 ? 'Start Over' : 'Next Question'}
+											{currentQuestion === 6 ? 'Keep Practicing!' : 'Next Question'}
 										</button>
 									)}
 								</div>
 							</div>
+							{showCelebration && (
+								<div className={`celebration-overlay ${showCelebration.fadeOut ? 'fade-out' : ''}`}>
+									<p className={`celebration-text ${showCelebration.fadeOut ? 'fade-out' : ''}`}>
+										Great Job! You're really getting the hang of this!
+									</p>
+								</div>
+							)}
 						</div>
 					</div>
 				</div>
