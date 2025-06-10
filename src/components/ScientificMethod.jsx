@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const ScientificMethod = () => {
 	const [isAnimating, setIsAnimating] = useState(false);
@@ -9,6 +9,7 @@ const ScientificMethod = () => {
 	const [isFadingOut, setIsFadingOut] = useState(false);
 	const [correctAnswerCount, setCorrectAnswerCount] = useState(0);
 	const [showCelebration, setShowCelebration] = useState(false);
+	const [isGlowActive, setIsGlowActive] = useState(false);
 
 	const handleReset = () => {
 		setIsAnimating(false);
@@ -62,9 +63,14 @@ const ScientificMethod = () => {
 
 	const handleExplain = () => {
 		setIsFadingOut(true);
+		setIsGlowActive(false);
 		setTimeout(() => {
 			setIsExplaining(true);
 			setIsFadingOut(false);
+			// Activate glow after explanation text has faded in
+			setTimeout(() => {
+				setIsGlowActive(true);
+			}, 800); // Match the delay of the explanation text fade-in
 		}, 300);
 	};
 
@@ -96,8 +102,84 @@ const ScientificMethod = () => {
 		<div className="w-[464px] mx-auto mt-5 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.05)] bg-white rounded-lg select-none">
 			<style>
 				{`
+					@property --r {
+						syntax: '<angle>';
+						inherits: false;
+						initial-value: 0deg;
+					}
+
+					.glow-button { 
+						position: absolute;
+						bottom: 0.5rem;
+						right: 0.5rem;
+						border-radius: 8px;
+						cursor: pointer;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						z-index: 1;
+						transition: all .3s ease;
+						padding: 7px;
+					}
+
+					.glow-button::before {
+						content: "";
+						display: block;
+						position: absolute;
+						background: #fff;
+						inset: 2px;
+						border-radius: 4px;
+						z-index: -2;
+					}
+
+					.simple-glow {
+						background: conic-gradient(
+							from var(--r),
+							transparent 0%,
+							rgb(0, 255, 132) 2%,
+							rgb(0, 214, 111) 8%,
+							rgb(0, 174, 90) 12%,
+							rgb(0, 133, 69) 14%,
+							transparent 15%
+						);
+						animation: rotating 3s linear infinite;
+						transition: animation 0.3s ease;
+					}
+
+					.simple-glow.stopped {
+						animation: none;
+						background: none;
+					}
+
+					.simple-glow.delayed-glow {
+						animation: none;
+						background: none;
+					}
+
+					.simple-glow.delayed-glow.active {
+						animation: rotating 3s linear infinite;
+						background: conic-gradient(
+							from var(--r),
+							transparent 0%,
+							rgb(0, 255, 132) 2%,
+							rgb(0, 214, 111) 8%,
+							rgb(0, 174, 90) 12%,
+							rgb(0, 133, 69) 14%,
+							transparent 15%
+						);
+					}
+
+					@keyframes rotating {
+						0% {
+							--r: 0deg;
+						}
+						100% {
+							--r: 360deg;
+						}
+					}
+
 					.reset-button {
-						background-color: #00783E;
+						background-color: #6B7280;
 						color: white;
 						border: none;
 						border-radius: 0.25rem;
@@ -114,7 +196,7 @@ const ScientificMethod = () => {
 						line-height: 1;
 					}
 					.reset-button:hover {
-						background-color: #006633;
+						background-color: #4B5563;
 					}
 					.node {
 						transition: fill 0.3s ease, opacity 0.3s ease;
@@ -167,9 +249,6 @@ const ScientificMethod = () => {
 						cursor: pointer;
 						transition: all 0.2s;
 						box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-						position: absolute;
-						bottom: 1rem;
-						right: 1rem;
 					}
 					.explore-button:hover {
 						background-color: #006633;
@@ -180,7 +259,7 @@ const ScientificMethod = () => {
 						transition: height 0.3s ease-in-out;
 					}
 					.interactive-container.expanded {
-						height: 380px;
+						height: 400px;
 					}
 					.feedback-text {
 						animation: fadeIn 0.3s ease-out forwards;
@@ -294,22 +373,6 @@ const ScientificMethod = () => {
 						gap: 0.5rem;
 					}
 
-					.skip-button {
-						background-color: #6B7280;
-						color: white;
-						border: none;
-						border-radius: 0.25rem;
-						padding: 0.25rem 0.75rem;
-						font-size: 0.75rem;
-						font-weight: 600;
-						cursor: pointer;
-						transition: all 0.2s;
-					}
-
-					.skip-button:hover {
-						background-color: #4B5563;
-					}
-
 					.celebration-overlay {
 						position: absolute;
 						top: 0;
@@ -345,7 +408,7 @@ const ScientificMethod = () => {
 			<div className="p-4">
 				{/* Title and Reset Button */}
 				<div className="flex justify-between items-center mb-4">
-					<h2 className="text-[#00783E] text-sm font-medium select-none">Steps of the Scientific Method</h2>
+					<h2 className="text-[#7973E9] text-sm font-medium select-none">Steps of the Scientific Method</h2>
 					<button 
 						className="reset-button"
 						onClick={handleReset}
@@ -357,7 +420,7 @@ const ScientificMethod = () => {
 
 				<div className="space-y-4">
 					{/* Interactive Section */}
-					<div className="w-[400px] mx-auto bg-white border border-[#00783E]/30 rounded-md overflow-hidden relative">
+					<div className="w-[400px] mx-auto bg-white border border-[#7973E9]/30 rounded-md overflow-hidden relative">
 						<div className={`relative w-[400px] interactive-container ${isExpanded ? 'expanded' : 'h-[320px]'}`}>
 							{isExpanded && !isExplaining && (
 								<>
@@ -479,19 +542,21 @@ const ScientificMethod = () => {
 									</g>
 								</svg>
 								{!isExpanded && (
-									<button
-										className="explore-button"
-										onClick={handleExplore}
-										disabled={isAnimating}
-									>
-										Explore
-									</button>
+									<div className={`glow-button ${isAnimating ? 'simple-glow stopped' : 'simple-glow'}`}>
+										<button
+											className="explore-button"
+											onClick={handleExplore}
+											disabled={isAnimating}
+										>
+											Explore
+										</button>
+									</div>
 								)}
 								{isExplaining && (
 									<div className="absolute top-4 left-0 right-0 px-8 text-center">
 										<p className={`text-sm font-medium text-gray-700 explanation-text mb-4 ${isFadingOut ? 'fade-out' : ''}`}>
 											{currentQuestion === 1 && (
-												<>This is the <span className="font-bold text-[#00783E]">Question</span> step because Jacob is wondering about something he wants to investigate. He's asking if heavy objects fall faster than lighter objects, which is a testable scientific question.</>
+												<>This is the <span className="font-bold text-[#00783E]">Question</span> step because Jacob is wondering about something to investigate. He's asking if heavy objects fall faster than lighter objects, which is a testable scientific question.</>
 											)}
 											{currentQuestion === 2 && (
 												<>This is the <span className="font-bold text-[#00783E]">Experiment</span> step because Jacob is actively testing his hypothesis with a controlled experiment. He's dropping both balls multiple times and collecting data to test his idea.</>
@@ -512,38 +577,36 @@ const ScientificMethod = () => {
 									</div>
 								)}
 							</div>
-							<div className="absolute bottom-2 flex w-full px-2 justify-between">
+							<div className="absolute bottom-0 flex w-full px-2 justify-between">
 								{(feedback && !isExplaining) && (
-									<div className={`feedback-container ${isFadingOut ? 'fade-out' : ''}`}>
+									<div className={`feedback-container ${isFadingOut ? 'fade-out' : ''}`} style={{ marginBottom: '1rem' }}>
 										<p className={`text-sm feedback-text ${feedback.isCorrect ? 'feedback-correct' : 'feedback-incorrect'}`}>
 											{feedback.text}
 										</p>
-										{!feedback.isCorrect && (
-											<button 
-												className="skip-button"
-												onClick={handleNextQuestion}
-											>
-												Skip
-											</button>
-										)}
 									</div>
 								)}
-								<div className="ml-auto flex gap-2">
-									{(!isExplaining && feedback?.isCorrect) && (
-										<button 
-											className={`feedback-button ${isFadingOut ? 'fade-out' : ''}`}
-											onClick={handleExplain}
-										>
-											Explain
-										</button>
-									)}
+								<div className="ml-auto">
 									{feedback?.isCorrect && (
-										<button 
-											className={`feedback-button ${!isExplaining ? (isFadingOut ? 'fade-out' : '') : (isFadingOut ? 'fade-out' : 'delayed-fade-in')}`}
-											onClick={currentQuestion === 6 ? handleReset : handleNextQuestion}
-										>
-											{currentQuestion === 6 ? 'Keep Practicing!' : 'Next Question'}
-										</button>
+										<div className={`glow-button ${isFadingOut ? 'simple-glow stopped' : isExplaining ? `simple-glow delayed-glow ${isGlowActive ? 'active' : ''}` : 'simple-glow'}`}>
+											<div className="flex gap-2">
+												{(!isExplaining && feedback?.isCorrect) && (
+													<button 
+														className={`feedback-button ${isFadingOut ? 'fade-out' : ''}`}
+														onClick={handleExplain}
+													>
+														Explain
+													</button>
+												)}
+												{feedback?.isCorrect && (
+													<button 
+														className={`feedback-button ${!isExplaining ? (isFadingOut ? 'fade-out' : '') : (isFadingOut ? 'fade-out' : 'delayed-fade-in')}`}
+														onClick={currentQuestion === 6 ? handleReset : handleNextQuestion}
+													>
+														{currentQuestion === 6 ? 'Keep Practicing!' : 'Next Question'}
+													</button>
+												)}
+											</div>
+										</div>
 									)}
 								</div>
 							</div>
